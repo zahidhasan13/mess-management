@@ -77,7 +77,7 @@ export const PATCH = async (request, { params }) => {
     mess.totalMembers = mess.members.length;
 
     // Update user's mess field
-    await User.updateOne({ _id: userToAdd._id }, { mess: mess._id });
+    await User.updateOne({ _id: userToAdd._id }, { mess: mess._id,role:"MessMember" });
 
     await mess.save();
 

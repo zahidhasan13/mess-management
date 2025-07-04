@@ -1,3 +1,4 @@
+'use client'
 import {
   Accordion,
   AccordionContent,
@@ -7,20 +8,39 @@ import {
 import { Edit, Plus, Trash2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 const MembersList = ({mess}) => {
   const { data: session, status } = useSession();
   const [members, setMembers] = useState([]);
+  const [loading,setLoading] = useState(false);
   const messData = mess[0];
 
+useEffect(() => {
+    const fetchMess = async () => {
+      try {
+        setLoading(true);
 
-  const addMemberHandler = async () => {
-    try {
-      
-    } catch (error) {
-      
-    }
-  };
+        const res = await fetch("/api/mess");
+
+        // Check if response is ok
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const messData = await res.json();
+        setMembers(messData?.data[0]?.members);
+      } catch (err) {
+        console.error("Error fetching mess data:", err);
+        setError(err?.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMess();
+  }, [])
+
+
     return (
         <div className="mt-10">
         <div className="flex justify-between items-center mb-4">
@@ -38,22 +58,24 @@ const MembersList = ({mess}) => {
         </div>
 
         {members?.length > 0 ? (
-          <div className="shadow-lg rounded p-4 bg-white mb-3">
+          <div>
+          {members.map((member) => (
+            <div key={member._id} className="shadow-lg rounded p-4 bg-white mb-3">
             <Accordion type="single" collapsible>
-              {members.map((member) => (
-                <AccordionItem key={member.id} value={`item-${member.id}`}>
+                <AccordionItem value={`item-${member._id}`}>
                   <AccordionTrigger className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-left font-semibold">
-                    {member.name}
+                    {member.fullName} {member.role === 'admin' && "- Manager"}
                   </AccordionTrigger>
                   <AccordionContent className="p-4 bg-white">
                     <div className="flex items-center justify-end mb-4">
+                      <Link href={`/updateMember/${member._id}`}>
                       <Edit
                         className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-700"
-                        onClick={() => handleEditMember(member.id)}
                       />
+                      </Link>
                       <Trash2
                         className="w-5 h-5 text-red-500 ml-2 cursor-pointer hover:text-red-700"
-                        onClick={() => handleDeleteMember(member.id)}
+                        onClick={() => handleDeleteMember(member._id)}
                       />
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -70,7 +92,7 @@ const MembersList = ({mess}) => {
                           Meal
                         </h3>
                         <p className="text-2xl font-bold text-green-800">
-                          {member.meal}
+                          {member.memberTotalMeal}
                         </p>
                       </div>
                       <div className="bg-red-100 p-3 rounded-md shadow">
@@ -92,8 +114,9 @@ const MembersList = ({mess}) => {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
-              ))}
             </Accordion>
+            </div>
+              ))}
           </div>
         ) : (
           <div className="bg-white shadow-lg rounded-lg p-8 text-center">

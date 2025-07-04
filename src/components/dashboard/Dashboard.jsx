@@ -16,7 +16,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const router = useRouter();
-  console.log(session);
 
   useEffect(() => {
     const fetchMess = async () => {
@@ -47,7 +46,6 @@ const Dashboard = () => {
 
   const messData = mess[0];
   const role = session?.user?.role;
-  console.log(messData);
   // Create New Mess
   const createMesshandler = async () => {
     if (!status === "authenticated") {

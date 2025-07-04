@@ -69,7 +69,7 @@ const MessStat = ({ messData }) => {
       <div className="bg-blue-100 rounded-md p-3 hover:scale-[1.02] transition-all duration-300 ease-in-out shadow-md">
         <h2 className="font-semibold text-lg text-purple-800">Meal Rate</h2>
         <p className="text-3xl font-bold mt-2 text-purple-800">
-          {messData?.mealRate}
+          {(messData?.totalExpend / messData?.totalMeal).toFixed(2)}
         </p>
       </div>
     </div>
