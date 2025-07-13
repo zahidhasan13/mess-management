@@ -15,39 +15,36 @@ const MembersList = ({ userName, mess }) => {
   const manager = userName?.role;
   const members = mess?.members;
   const mealRate = Number(mess?.totalExpend / mess?.totalMeal).toFixed(2);
-  const {dailyMeal} = useFetchDailyMeal();
+  const { dailyMeal } = useFetchDailyMeal();
 
-  
-const handleUserDelete = async (userId) => {
-  const result = await Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-  });
+  const handleUserDelete = async (userId) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
 
-  if (result.isConfirmed) {
-    try {
-      const res = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-      });
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/api/users/${userId}`, {
+          method: "DELETE",
+        });
 
-      if (!res.ok) throw new Error('Failed to delete user');
+        if (!res.ok) throw new Error("Failed to delete user");
 
-      Swal.fire('Deleted!', 'User has been deleted.', 'success');
+        Swal.fire("Deleted!", "User has been deleted.", "success");
 
-      // Optional: Refresh or update UI
-    } catch (error) {
-      Swal.fire('Error!', 'Something went wrong.', 'error');
-      console.error(error);
+        // Optional: Refresh or update UI
+      } catch (error) {
+        Swal.fire("Error!", "Something went wrong.", "error");
+        console.error(error);
+      }
     }
-  }
-};
-
-  
+  };
 
   return (
     <div className="mt-10">
@@ -69,19 +66,24 @@ const handleUserDelete = async (userId) => {
         <div>
           {members.map((member) => (
             <div
-              key={member._id}
+              key={member?._id}
               className="shadow-lg rounded p-4 bg-white mb-3"
             >
               <Accordion type="single" collapsible>
-                <AccordionItem value={`item-${member._id}`}>
+                <AccordionItem value={`item-${member?._id}`}>
                   <AccordionTrigger className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-left font-semibold">
-                    {member.fullName} {member.role === "admin" && "- Manager"}
+                    {member?.fullName} {member?.role === "admin" && "- Manager"}
                   </AccordionTrigger>
                   <AccordionContent className="p-4 bg-white">
                     {manager === "admin" && (
                       <div className="flex items-center justify-end mb-4">
-                        <Link href={`/updateMember/${member?._id}`}><Edit className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-700" /></Link>
-                        <Trash2 onClick={()=>handleUserDelete(member?._id)} className="w-5 h-5 text-red-500 ml-2 cursor-pointer hover:text-red-700" />
+                        <Link href={`/updateMember/${member?._id}`}>
+                          <Edit className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-700" />
+                        </Link>
+                        <Trash2
+                          onClick={() => handleUserDelete(member?._id)}
+                          className="w-5 h-5 text-red-500 ml-2 cursor-pointer hover:text-red-700"
+                        />
                       </div>
                     )}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -90,7 +92,7 @@ const handleUserDelete = async (userId) => {
                           Deposit
                         </h3>
                         <p className="text-2xl font-bold text-blue-800">
-                          ${member.deposit}
+                          ${member?.deposit}
                         </p>
                       </div>
                       <div className="bg-green-100 p-3 rounded-md shadow">
@@ -98,7 +100,7 @@ const handleUserDelete = async (userId) => {
                           Meal
                         </h3>
                         <p className="text-2xl font-bold text-green-800">
-                          {member.memberTotalMeal}
+                          {member?.memberTotalMeal}
                         </p>
                       </div>
                       <div className="bg-green-100 p-3 rounded-md shadow">
@@ -107,7 +109,7 @@ const handleUserDelete = async (userId) => {
                         </h3>
                         <p className="text-2xl font-bold text-green-800">
                           {Number(
-                            (member.memberTotalMeal * mealRate).toFixed(2)
+                            (member?.memberTotalMeal * mealRate).toFixed(2)
                           ) || 0}
                         </p>
                       </div>
@@ -116,14 +118,23 @@ const handleUserDelete = async (userId) => {
                           Due
                         </h3>
                         <p className="text-2xl font-bold text-purple-800">
-                          ${Number(member?.deposit - Number(
-                            (member.memberTotalMeal * mealRate).toFixed(2)
-                          ).toFixed(0)) || 0}
+                          $
+                          {Number(
+                            member?.deposit -
+                              Number(
+                                (member?.memberTotalMeal * mealRate).toFixed(2)
+                              ).toFixed(0)
+                          ) || 0}
                         </p>
                       </div>
                     </div>
                     <div className="mt-10">
-                      <DailyMealTable dailyMeal={dailyMeal} memberId={member?._id}/>
+                      {member?.memberTotalMeal > 0 && (
+                        <DailyMealTable
+                          dailyMeal={dailyMeal}
+                          memberId={member?._id}
+                        />
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>

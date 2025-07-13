@@ -27,7 +27,7 @@ export function DailyMealTable({ dailyMeal, memberId }) {
         </TableHeader>
         <TableBody>
           <TableRow
-            key={memberMeal._id}
+            key={memberMeal?._id}
             className="hover:bg-purple-50 transition-colors"
           >
             <TableCell className="font-medium text-indigo-700">
