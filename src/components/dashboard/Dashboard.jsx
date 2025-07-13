@@ -1,98 +1,47 @@
 "use client";
-import { Button } from "../ui/button";
-import { Utensils } from "lucide-react";
-import Link from "next/link";
+import ProfileAvatar from "../ProfileAvatar";
+import MessStat from "../MessStat";
+import MembersList from "../MembersList";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import MessStat from "../MessStat";
-import ProfileAvatar from "../ProfileAvatar";
-import MembersList from "../MembersList";
+import moment from "moment";
+import useFetchMess from "@/hooks/useFetchMess";
 
 const Dashboard = () => {
-  const { data: session, status } = useSession();
-  const [mess, setMess] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const router = useRouter();
+  const { data: session } = useSession();
+  const { mess, loading, error } = useFetchMess();
+  const userRole = session?.user?.role;
+  console.log(userRole);
 
-  useEffect(() => {
-    const fetchMess = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const res = await fetch("/api/mess");
-
-        // Check if response is ok
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const messData = await res.json();
-
-        setMess(messData?.data);
-      } catch (err) {
-        console.error("Error fetching mess data:", err);
-        setError(err?.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMess();
-  }, []);
-
-  const messData = mess[0];
-  const role = session?.user?.role;
-  // Create New Mess
-  const createMesshandler = async () => {
-    if (!status === "authenticated") {
-      toast.error("Login First Please!");
-    } else {
-      router.push("/create-mess");
-    }
-  };
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
+      </div>
+    );
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex md:items-center space-x-4 flex-col md:flex-row">
+      <div className="flex items-center justify-between mb-6 h-16">
+        <div className="flex flex-1 space-x-4 flex-col md:flex-row">
           <h1 className="text-2xl font-bold text-center text-gray-800">
-            {messData?.messName} Dashboard
+            {mess?.messName} Dashboard
           </h1>
         </div>
-        <div>
-          {status === "authenticated" && (
-            <ProfileAvatar userName={session?.user?.fullName} />
-          )}
+        {(userRole === "admin" || userRole === "MessMember") && (
+          <div className="flex-1 text-center flex flex-col bg-blue-100 rounded py-2 text-blue-800">
+            <strong>{moment().format("MMMM")} Month Report</strong>
+            <strong>Today: {moment().format("MMM Do YYYY")}</strong>
+          </div>
+        )}
+
+        <div className="flex-1 text-right">
+          <ProfileAvatar userName={session?.user} />
         </div>
       </div>
-      {mess && role==="admin" ? (
-        <MessStat messData={messData} />
-      ) : (
-        <div className="my-8 p-6 bg-white rounded-xl shadow-md border border-gray-100">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Utensils className="text-orange-500" />
-            Establish Your Mess
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Set up your mess management system to streamline meal planning,
-            member management, and financial tracking for your organization.
-          </p>
-          <button
-            onClick={() => createMesshandler()}
-            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
-          >
-            <Utensils className="w-5 h-5" />
-            Create New Mess
-          </button>
-        </div>
-      )}
-      {/* All Members Info */}
-      <MembersList mess={mess} />
-      <Toaster />
+
+      <MessStat userName={session?.user} mess={mess} />
+      <MembersList userName={session?.user} mess={mess} />
     </div>
   );
 };

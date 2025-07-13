@@ -4,39 +4,10 @@ import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 import User from "@/models/userModel";
 
-
-export const GET = async (request, { params }) => {
-  await connectDB();
-  try {
-    const { id } = params;
-
-    const mess = await Mess.findById(id).populate("members");
-
-    if (!mess) {
-      return Response.json(
-        { error: "Mess not found" },
-        { status: 404 }
-      );
-    }
-
-    return Response.json(
-      { message: "Mess fetched successfully", mess },
-      { status: 200 }
-    );
-  } catch (error) {
-    return Response.json(
-      { error: error.message || "Something went wrong" },
-      { status: 500 }
-    );
-  }
-};
-
-
 export const PATCH = async (request, { params }) => {
   try {
     await connectDB();
 
-    // Get mess ID
     let messId = params?.id;
     if (!messId) {
       const urlParts = request.url.split("/");
@@ -45,29 +16,27 @@ export const PATCH = async (request, { params }) => {
 
     const { email, currentUserId } = await request.json();
 
-    // Validate mess ID
     if (!mongoose.Types.ObjectId.isValid(messId)) {
       return NextResponse.json({ error: "Invalid mess ID" }, { status: 400 });
     }
 
-    // Find the mess
     const mess = await Mess.findById(messId);
     if (!mess) {
       return NextResponse.json({ error: "Mess not found" }, { status: 404 });
     }
 
-    // Only admin can add members
     if (mess.admin.toString() !== currentUserId) {
       return NextResponse.json({ error: "Only admin can add members" }, { status: 403 });
     }
 
-    // Find user by email
     const userToAdd = await User.findOne({ email });
     if (!userToAdd) {
       return NextResponse.json({ error: "User not found with that email" }, { status: 404 });
     }
+    if (userToAdd?.role === "MessMember" || userToAdd?.role === "admin") {
+      throw new Error("User is already a member of another mess.");
+    }
 
-    // Check if already a member
     if (mess.members.includes(userToAdd._id)) {
       return NextResponse.json({ error: "User is already a member" }, { status: 409 });
     }
@@ -76,21 +45,59 @@ export const PATCH = async (request, { params }) => {
     mess.members.push(userToAdd._id);
     mess.totalMembers = mess.members.length;
 
-    // Update user's mess field
-    await User.updateOne({ _id: userToAdd._id }, { mess: mess._id,role:"MessMember" });
-
     await mess.save();
 
-    return NextResponse.json(
-      { message: "Member added successfully", mess },
-      { status: 200 }
+    await User.updateOne(
+      { _id: userToAdd._id },
+      { mess: mess._id, role: "MessMember" }
     );
 
+    // Force update and return updated mess
+    const updatedMess = await updateMessTotals(messId);
+
+    return NextResponse.json(
+      { message: "Member added successfully", mess: updatedMess },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Add Member Error:", error);
-    return NextResponse.json({ error: error.message || "Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Server Error" },
+      { status: 500 }
+    );
   }
 };
+
+
+// Helper function to update mess totals
+async function updateMessTotals(messId) {
+  const members = await User.find({ mess: messId });
+  const totalDeposit = members.reduce((sum, member) => sum + (member.deposit || 0), 0);
+
+  const mess = await Mess.findById(messId);
+  const totalMeal = mess.totalMeal || 0;
+  const totalExpend = mess.totalExpend || 0;
+  const mealRate = totalMeal > 0 ? totalExpend / totalMeal : 0;
+
+  // Perform update and return updated document
+  const updatedMess = await Mess.findByIdAndUpdate(
+    messId,
+    {
+      totalDeposit,
+      mealRate: parseFloat(mealRate.toFixed(2)),
+    },
+    { new: true } // return the updated document
+  );
+
+  return updatedMess;
+}
+
+
+
+
+
+
+
 
 
 

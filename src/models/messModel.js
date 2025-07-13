@@ -20,6 +20,10 @@ const messSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    totalDeposit:{
+      type: Number,
+      default: 0,
+    },
     totalMeal: {
       type: Number,
       default: 0,

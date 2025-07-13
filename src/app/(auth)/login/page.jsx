@@ -26,7 +26,7 @@ const LoginPage = () => {
       
       // Successful login
       toast.success('Login successful!');
-      router.push('/'); // Using push instead of replace for better UX
+      router.push('/'); 
     } catch (error) {
       setError(error.message);
       toast.error(error.message);

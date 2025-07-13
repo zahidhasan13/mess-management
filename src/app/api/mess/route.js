@@ -1,35 +1,44 @@
 import connectDB from "@/lib/connectDB";
 import Mess from "@/models/messModel";
 import User from "@/models/userModel";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
-export const GET = async () => {
+
+export const GET = async (request) => {
   await connectDB();
   try {
-    const mess = await Mess.find()
-      .populate({
-        path: 'members',
-        model: 'User',
-        selecet:"fullName, deposit, memberMeal, guestMeal,memberTotalMeal, due,expend"
-      })
-      .populate({
-        path: 'admin',
-        model: 'User',
-      });
+    const session = await getServerSession(authOptions);
+    console.log(session);
+    
+    if (!session?.user?.id) {
+      return Response.json(
+        { error: "Unauthorized - Please log in" },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+
+    // Find a mess where the user is a member
+    const mess = await Mess.findOne({ members: userId })
+      .populate("members")
+      .populate("admin");
+
+    if (!mess) {
+      return Response.json(
+        { error: "No mess found where you are a member" },
+        { status: 404 }
+      );
+    }
 
     return Response.json(
-      { 
-        message: "Mess fetched successfully", 
-        data: mess 
-      },
+      { message: "Mess fetched successfully", mess },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error fetching mess:', error);
     return Response.json(
-      { 
-        error: error.message || "Failed to fetch Mess",
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      },
+      { error: error.message || "Something went wrong" },
       { status: 500 }
     );
   }
@@ -42,7 +51,6 @@ export const POST = async (request) => {
   await connectDB();
   try {
     const { messName, userId } = await request.json();
-    console.log(messName, userId);
 
     if (!messName || !userId) {
       throw new Error("Mess name and user ID are required!");

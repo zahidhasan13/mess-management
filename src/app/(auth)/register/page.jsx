@@ -35,7 +35,7 @@ const RegisterPage = () => {
       toast.success('Registration successful! Redirecting to login...');
       setTimeout(() => {
         router.push('/login');
-      }, 2000);
+      }, 1000);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -126,7 +126,7 @@ const RegisterPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400"
+                  className="absolute right-0 top-1/2 -translate-1/2 text-gray-400 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -156,7 +156,7 @@ const RegisterPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400"
+                  className="absolute right-0 top-1/2 -translate-1/2 text-gray-400 cursor-pointer"
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
